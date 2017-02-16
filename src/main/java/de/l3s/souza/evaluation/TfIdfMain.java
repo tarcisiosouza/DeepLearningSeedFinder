@@ -35,9 +35,10 @@ public class TfIdfMain {
     	
         DocumentParser dpElastic = new DocumentParser();
        
-        dpElastic.parseFiles("/home/souza/articles/",relevance);
         
-        File f = new File ("/home/souza/Article_10.txt");
+        dpElastic.parseFiles("/home/souza/articles/test",relevance);
+        
+    /*    File f = new File ("/home/souza/Article_10.txt");
         FileReader fr = new FileReader (f);
         BufferedReader br = new BufferedReader (fr);
         String line;
@@ -48,14 +49,16 @@ public class TfIdfMain {
         }
         
         dpElastic.parseDocument(document);
+        */
         dpElastic.tfIdfCalculator();
-        dpElastic.tfIdfCalculatorDocument();
-        ElasticFileNames =  dpElastic.getFileNames();
+        //dpElastic.tfIdfCalculatorDocument();
+        //ElasticFileNames =  dpElastic.getFileNames();
         
-        tfidfDocsElastic= dpElastic.getTfidfDocsVector();
+       // tfidfDocsElastic= dpElastic.getTfidfDocsVector();
        
-        dpElastic.tfIdfCalculatorDocument(); //calculates tfidf
-        dpElastic.getCosineSimilarityDoc();
+        dpElastic.getCosineSimilarity();
+        //dpElastic.tfIdfCalculatorDocument(); //calculates tfidf
+        //dpElastic.getCosineSimilarityDoc();
         
         int i = 0;
         int size = UserFileNames.size();

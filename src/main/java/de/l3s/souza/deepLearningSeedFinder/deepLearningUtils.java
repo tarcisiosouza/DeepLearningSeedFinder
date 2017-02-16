@@ -32,7 +32,7 @@ public class deepLearningUtils {
 		
 		 try 
 	   	  {
-	   	   File fl = new File("./stopwords.txt");
+	   	   File fl = new File("/home/souza/stopwords_de.txt");
 	   	   BufferedReader br = new BufferedReader(new FileReader(fl)) ;
 	   	   String str;
 	   	   while ((str=br.readLine())!=null)

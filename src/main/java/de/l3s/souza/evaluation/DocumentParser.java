@@ -14,7 +14,8 @@ import java.util.StringTokenizer;
 /**
  * Class to read documents
  *
- * @author Mubin Shrestha
+ * @authors Mubin Shrestha, Tarcisio Souza
+ * 
  */
 public class DocumentParser {
 
@@ -55,6 +56,57 @@ public class DocumentParser {
     	
     }
     
+    //calculate similarity given a pair of documents
+    public double SimilarityPairDocuments (String text1, String text2)
+    {
+    	double similarity = 0.0f;
+    	
+    	String[]docTermsText1;
+    	String[]docTermsText2;
+    	
+    	allTerms.clear();
+    	termsDocsArray.clear();
+    	
+    	docTermsText1 = addTermsFromDocument (removeStopWords (text1));
+    	docTermsText2 = addTermsFromDocument (removeStopWords (text2));
+    	
+    	double[] tfidfText1 = tfIdfVectorGenerator (docTermsText1);
+    	double[] tfidfText2 = tfIdfVectorGenerator (docTermsText2);
+    	
+    	similarity = new CosineSimilarity().cosineSimilarity(tfidfText1, tfidfText2);
+    	return similarity;
+    	
+    }
+    
+    //get the highest similarity comparing with a collection of documents
+    public double getHigherScoreSimilarity (String text1, HashSet<String> collection) throws Exception
+    {
+   	 double currentHigher = 0.0f;
+   	 
+   	for (String s : collection) {
+   		double current = SimilarityPairDocuments (text1,s);
+   		if (current > currentHigher)
+   			currentHigher = current;
+   	}
+   	 
+   	 return currentHigher;
+   	 
+    }
+    
+    public String[] addTermsFromDocument (String text)
+    {
+    	String[] tokenizedTerms = text.replaceAll("[\\W&&[^\\s]]", "").split("\\W+"); 
+   	 	for (String term : tokenizedTerms) {
+            if (!allTerms.contains(term)) {  //avoid duplicate entry
+                allTerms.add(term);
+            }
+        }
+   	 	
+   	 	termsDocsArray.add(tokenizedTerms);
+   	 	return tokenizedTerms;
+   	 	
+    	
+    }
     public String removeStopWords (String str)
 	{
 		String newStr="";
@@ -71,6 +123,8 @@ public class DocumentParser {
 		}
 		return newStr;
 	}
+    
+    //parse a collection in separated files
     public void parseFiles(String filePath,HashMap<Integer,Integer> relevance) throws FileNotFoundException, IOException {
         File[] allfiles = new File(filePath).listFiles();
         BufferedReader in = null;
@@ -106,47 +160,10 @@ public class DocumentParser {
                 termsDocsArray.add(tokenizedTerms);
               //  fileNames.put(f.getName(),relevance.get(docId));
                 i++;
-                if (i>21)
-                	break;
+               
             }
         }
 
-    }
-
-    public void parseDocument(String document)
-    {
-    	String filteredDocument;
-    	
-    	filteredDocument = removeStopWords (document);
-    	
-    	String[] tokenizedTerms = filteredDocument.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");
-    	
-    	/*for (String term : tokenizedTerms)
-    	{
-    		if (!allTerms.contains(term))
-    		{
-    			allTerms.add(term);
-    		}
-    	}*/
-    	termsDocArray.add(tokenizedTerms);
-    }
-   
-    public void tfIdfCalculatorDocument() {
-        double tf; //term frequency
-        double idf; //inverse document frequency
-        double tfidf; //term requency inverse document frequency        
-        for (String[] docTermsArray : termsDocArray) {
-        	tfidfVector = new double[allTerms.size()];
-            int count = 0;
-            for (String terms : allTerms) {
-                tf = new TfIdf().tfCalculator(docTermsArray, terms);
-                idf = new TfIdf().idfCalculator(termsDocsArray, terms);
-                tfidf = tf * idf;
-                tfidfVector[count] = tfidf;
-                count++;
-            }
-                       
-        }
     }
 
 	/**
@@ -170,6 +187,24 @@ public class DocumentParser {
         }
     }
     
+    public double[] tfIdfVectorGenerator (String[] docTermsArray)
+    {
+    	  double tf; //term frequency
+          double idf; //inverse document frequency
+          double tfidf; //term requency inverse document frequency  
+          double[] tfidfvectors = new double[allTerms.size()];
+          int count = 0;
+          
+          for (String terms : allTerms) {
+            tf = new TfIdf().tfCalculator(docTermsArray, terms);
+            idf = new TfIdf().idfCalculator(termsDocsArray, terms);
+            tfidf = tf * idf;
+            tfidfvectors[count] = tfidf;
+            count++;
+          }
+          return tfidfvectors;
+    }
+    
 
     /**
      * Method to calculate cosine similarity between all the documents.
@@ -188,19 +223,7 @@ public class DocumentParser {
         }
     }
 
-    public void getCosineSimilarityDoc() {
-            for (int j = 0; j < tfidfDocsVector.size(); j++) {
-                System.out.println("between " +j + " and currentVector " +
-                                   + new CosineSimilarity().cosineSimilarity
-                                       (
-                                    		   tfidfVector, 
-                                         tfidfDocsVector.get(j)
-                                       )
-                                  );
-            }
-        }
 
-    
 	public List<String[]> getTermsDocsArray() {
 		return termsDocsArray;
 	}

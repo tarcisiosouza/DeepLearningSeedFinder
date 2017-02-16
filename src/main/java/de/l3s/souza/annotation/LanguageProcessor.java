@@ -1,4 +1,4 @@
-package de.l3s.souza.deepLearningSeedFinder;
+package de.l3s.souza.annotation;
 
 
 import java.io.BufferedReader;

@@ -30,6 +30,8 @@ import java.util.StringTokenizer;
 
 import de.l3s.elasticquery.Article;
 import de.l3s.elasticquery.ElasticMain;
+import de.l3s.souza.annotation.EntityUtils;
+import de.l3s.souza.evaluation.ScoreFunctions;
 import de.unihd.dbs.heideltime.standalone.DocumentType;
 import de.unihd.dbs.heideltime.standalone.HeidelTimeStandalone;
 import de.unihd.dbs.heideltime.standalone.OutputType;
@@ -40,6 +42,7 @@ import de.unihd.dbs.uima.annotator.heideltime.resources.Language;
 public class Query 
 {
 	private static final boolean localmode = false;
+	private ScoreFunctions urlScoreObject = new ScoreFunctions();
 	private int terms;
 	private BufferedWriter bw;
 	private int maxSimTerms;
@@ -116,7 +119,7 @@ public class Query
 		return nextQuery;
 	}
 	//"bundestagswahl 2002",10000,"text",4,10,500,5,0.2,0.02);
-	public Query(String initialQuery,int limit,String field,int terms, int maxSimTerms, int maxDoc, int maxIter, double alpha,double beta) throws Exception {
+	public Query(String initialQuery,int limit,String field,int terms, int maxSimTerms, int maxDoc, int maxIter, double alpha,double beta,double gama) throws Exception {
 		
 		super();
 		this.beta = beta;
@@ -180,32 +183,33 @@ public class Query
 		articles = new HashMap<String,Article>();
 		finalDocSet = new HashMap<Article,Double>();
 		addQueryTerms(initialQuery);
-		processQuery(initialQuery);
+		processQuery(initialQuery,field);
 		handleDuplicates(articles);
 		
-		//annotations = new EntityUtils ();
+		annotations = new EntityUtils ();
 		deepLearning = new deepLearningUtils ("articles.txt");
 		deepLearning.loadModel("pathToSaveModel.txt");
-		Collection<String> nearest = deepLearning.getWordsNearest("merkel",10);
+	/*	Collection<String> nearest = deepLearning.getWordsNearest("merkel",10);
 		
 		  for (Iterator iterator = nearest.iterator(); iterator.hasNext();) 
 		  {
 		        String element = (String) iterator.next();
 		        System.out.print (element +" ");
 
-		  }
+		  }*/
 		//deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");
 		queryExpansion = new QueryExpansion(initialQuery, articlesWithoutDuplicates, articles, maxSimTerms, terms, alpha, beta);
 		//deepLearning.loadModel("pathToSaveModel.txt");
 
 		populateRetrivedDocuments();
-		if (localmode)
+	/*	if (localmode)
 			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/Users/tarcisio/Documents/workspace/deepLearningSeedFinder/articles.txt");
 		else
-			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");
+			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");*/
 	//	deepLearning.loadModel("pathToSaveModel.txt");
-		extractEntitiesFromDocuments();
-		queryExpansion.extractSimilarTermsQuery(deepLearning, annotations,entitiesCandidates);
+	//	extractEntitiesFromDocuments();
+		//queryExpansion.extractSimilarTermsQuery(deepLearning, annotations,entitiesCandidates);
+		queryExpansion.extractSimilarTermsUrls(deepLearning, annotations,heidelTime,gama);
 		HashSet<String> nextQuery;
 		nextQuery = queryExpansion.getNextQuery();
 		//testBabelFy(articlesWithoutDuplicates);
@@ -215,6 +219,9 @@ public class Query
 	
 		while (iter <= maxIter)
 		{
+			
+			if (iter==2)
+				System.out.println();
 			currentQueryString = "";
 			Iterator<String> iterator = nextQuery.iterator();
 			int size = nextQuery.size();
@@ -232,28 +239,37 @@ public class Query
 				position++;
 				
 			}
+			currentQueryString = currentQueryString.replaceAll("ue", "ü");
+			currentQueryString = currentQueryString.replaceAll("oe", "ö");
+			currentQueryString = currentQueryString.replaceAll("ae", "ä");
 			System.out.println ("Processing query: "+currentQueryString+" "+"iter: "+iter);
 			addQueryTerms(currentQueryString);
-			processQuery(currentQueryString);
+			processQuery(currentQueryString,"text");
 			handleDuplicates(articles);
 			populateRetrivedDocuments();
 		
 	/*	if (localmode)
 			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/Users/tarcisio/Documents/workspace/deepLearningSeedFinder/articles.txt");
 		else
-			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");
+			deepLearning.train(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");
 		*/
+			
 			queryExpansion.setCurrentQuery(currentQueryString);
 			queryExpansion.setArticlesWithoutDup(articlesWithoutDuplicates);
-			extractEntitiesFromDocuments();
-			queryExpansion.extractSimilarTermsQuery(deepLearning, annotations,entitiesCandidates);
+		//	extractEntitiesFromDocuments();
+	//		queryExpansion.extractSimilarTermsUrls();
+			
+			queryExpansion.extractSimilarTermsUrls(deepLearning, annotations,heidelTime,gama);
+			//queryExpansion.extractSimilarTermsQuery(deepLearning, annotations,entitiesCandidates);
 			nextQuery = queryExpansion.getNextQuery();
 			
 			//evaluateDocuments();
 			iter ++;
 			
 		}
+		
 		fitFinalDoc();
+		finalDocSet = urlScoreObject.urlScoreFunction("2002", finalDocSet);
 		sortFinalDoc();
 	//	evaluateDocuments();
 	//	sortFinalDoc();
@@ -359,9 +375,10 @@ public class Query
 	
 	}
 	
-	public void processQuery (String query) throws Exception
+	public void processQuery (String query,String field) throws Exception
 	{
 			 ElasticMain.setKeywords(query);
+			 ElasticMain.setField(field);
 			 ElasticMain.run();
 			 articles = ElasticMain.getResult();
 	}

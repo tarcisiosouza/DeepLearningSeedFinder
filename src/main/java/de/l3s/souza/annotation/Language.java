@@ -1,4 +1,4 @@
-package de.l3s.souza.deepLearningSeedFinder;
+package de.l3s.souza.annotation;
 
 public enum Language {
 	EN("en"), DE("de"), ES("es"), RU("ru"), CS("cs"), FR("fr"), IT("it"), PL("pl"), PT("pt"), NL("nl"), SE("se"), DA("da"), HU("hu"), TR("tr");

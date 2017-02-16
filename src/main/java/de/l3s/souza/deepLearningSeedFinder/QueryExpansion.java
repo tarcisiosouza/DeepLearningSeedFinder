@@ -1,8 +1,16 @@
 package de.l3s.souza.deepLearningSeedFinder;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,16 +23,27 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import de.l3s.elasticquery.Article;
+import de.l3s.souza.annotation.EntityUtils;
+import de.l3s.souza.evaluation.DocumentParser;
+import de.l3s.souza.evaluation.DocumentSimilarity;
+import de.l3s.souza.evaluation.PairDocumentSimilarity;
+import de.l3s.souza.preprocess.PreProcess;
+import de.unihd.dbs.heideltime.standalone.HeidelTimeStandalone;
 
 public class QueryExpansion {
 	
 	private HashMap<String,Double> queryCandidatesScores;
+	private PairDocumentSimilarity parser = new PairDocumentSimilarity ();
+	private HashSet <String> collectionSpecification;
+	private HashMap<String,Double> urlTerms = new HashMap<String,Double>(); //to hold all terms
 	private HashMap<String,Double> usedTerms;
+	private DocumentSimilarity similarity;
 	private HashMap<String,Double> querySimilarTerms;
 	private HashMap<String,Article> articlesWithoutDup;
 	private double beta;
 	private double alpha;
 	private int expandTerms;
+	private PreProcess preprocess;
 	private static boolean ASC = true;
     private static boolean DESC = false;
 	private int totalSimilar;
@@ -36,8 +55,14 @@ public class QueryExpansion {
 		return nextQuery;
 	}
 
+	
 	public QueryExpansion(String cQuery,HashMap<String,Article> articlesWitDup,HashMap<String,Article> art,
-			int totalSimilar,int expandedTerms, double alpha,double beta) {
+			int totalSimilar,int expandedTerms, double alpha,double beta) throws FileNotFoundException, IOException {
+		
+		preprocess = new PreProcess ();
+		collectionSpecification = new HashSet <String> ();
+		parseFiles("/home/souza/CS");
+		similarity = new DocumentSimilarity ();
 		
 		currentQuery = cQuery;
 		nextQuery = new HashSet<String>();
@@ -101,6 +126,90 @@ public class QueryExpansion {
 		nextQuery.clear();
 	}
 	
+	
+	public void extractSimilarTermsUrls (deepLearningUtils deepLearning, EntityUtils annotations, HeidelTimeStandalone heidelTime,double gama) throws Exception
+	{
+		int count = 0;
+		int count2 = 0;
+		String timeRetrieved;
+		Date d1 = new Date ();
+		
+		nextQuery.clear();
+		
+		for (Entry<String, Article> s : articlesWithoutDup.entrySet())	
+		{
+			
+			String article = preprocess.removeStopWords(s.getValue().getText());
+			double sim = parser.getHigherScoreSimilarity(article, collectionSpecification);
+			if (sim < 0.5)
+			{
+				count++;
+				continue;
+			}
+			
+			String url = s.getValue().getUrl();
+			
+			String tokenizedTerms = preprocess.preProcessUrl(url);   //to get individual terms
+			if (tokenizedTerms.contentEquals(""))
+				continue;
+			StringTokenizer token = new StringTokenizer (tokenizedTerms);
+			
+			while (token.hasMoreTokens()) {
+				String term = token.nextToken();
+				term = term.toLowerCase();
+				Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
+				timeRetrieved = null;
+				if (term.length()<=2)
+					continue;
+				
+				if (nearest.isEmpty() && (annotations.getEntities(term)==null) && ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL")))
+					continue;
+				else
+					 urlTerms.put(term, sim);
+					
+			}	
+			
+		}
+		
+		urlTerms = normalizeScores (urlTerms);
+		
+		for (Entry<String,Double> s: urlTerms.entrySet())
+		{
+			
+			String candidate = s.getKey();
+			StringTokenizer token = new StringTokenizer (currentQuery);
+			
+			double sim = 0;
+			
+			while (token.hasMoreTokens())
+				sim = sim + deepLearning.getCosSimilarity(token.nextToken(), candidate);
+			
+			if (sim < 0)
+				sim = 0.0f;
+			
+			sim /= currentQuery.length();
+			
+			double finalScore = (gama*sim) + (1-gama)*s.getValue();
+			
+			urlTerms.put(s.getKey(), finalScore);
+		}
+		
+		
+		Map<String, Double> ordered = sortByComparator (urlTerms,DESC);
+		int terms = 0;
+		for (Entry<String, Double> s : ordered.entrySet())
+		{
+			terms ++;
+			if (terms <= expandTerms)
+				nextQuery.add(s.getKey());
+		}
+	/*	
+		for (Entry<String,Double> s: urlTerms.entrySet())
+		{
+			System.out.println (s.getKey() + " " +s.getValue());
+		}
+		*/
+	}
 	public void extractSimilarTermsQuery (deepLearningUtils deepLearning, EntityUtils annotations, HashMap<String,Double> entities)
 	{
 		String currentTerm ;
@@ -320,5 +429,27 @@ public class QueryExpansion {
 
 	            return sortedMap;
 	}
+	
+    public void parseFiles(String filePath) throws FileNotFoundException, IOException {
+        File[] allfiles = new File(filePath).listFiles();
+        BufferedReader in = null;
+        int i = 0;
+        int size = allfiles.length;
+        String filteredDocument="";
+        
+        for (File f : allfiles) {
+            if (f.getName().endsWith(".txt")) {
+                in = new BufferedReader(new FileReader(f));
+                StringBuilder sb = new StringBuilder();
+                String s = null;
+                while ((s = in.readLine()) != null) {
+                    sb.append(s);
+                }
+                
+                filteredDocument = preprocess.removeStopWords(sb.toString());
+                collectionSpecification.add(filteredDocument);
+            }
+        }
+    }
 	
 }
