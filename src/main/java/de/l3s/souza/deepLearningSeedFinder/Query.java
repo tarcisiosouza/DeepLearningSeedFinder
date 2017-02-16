@@ -31,7 +31,9 @@ import java.util.StringTokenizer;
 import de.l3s.elasticquery.Article;
 import de.l3s.elasticquery.ElasticMain;
 import de.l3s.souza.annotation.EntityUtils;
+import de.l3s.souza.evaluation.PairDocumentSimilarity;
 import de.l3s.souza.evaluation.ScoreFunctions;
+import de.l3s.souza.preprocess.PreProcess;
 import de.unihd.dbs.heideltime.standalone.DocumentType;
 import de.unihd.dbs.heideltime.standalone.HeidelTimeStandalone;
 import de.unihd.dbs.heideltime.standalone.OutputType;
@@ -209,6 +211,7 @@ public class Query
 	//	deepLearning.loadModel("pathToSaveModel.txt");
 	//	extractEntitiesFromDocuments();
 		//queryExpansion.extractSimilarTermsQuery(deepLearning, annotations,entitiesCandidates);
+		
 		queryExpansion.extractSimilarTermsUrls(deepLearning, annotations,heidelTime,gama);
 		HashSet<String> nextQuery;
 		nextQuery = queryExpansion.getNextQuery();
@@ -281,12 +284,28 @@ public class Query
 		sb.append("<th>Timestamp</th>");
 		sb.append("<th>score</th>");
 		sb.append("<th>article</th>");
+		sb.append("<th>relevance</th>");
 		sb.append("<th>URL</th>");
 		sb.append("</tr>");
+		
+		PreProcess preprocess = new PreProcess ();
+		PairDocumentSimilarity parser = new PairDocumentSimilarity ();
+		HashSet <String> cs = new HashSet<String>();
+		cs = queryExpansion.getCollectionSpecification();
+		int relevance;
 		
 		int articleNumber = 1;
 		for(Entry<Article, Double> s : finalDocSet.entrySet())
 		{
+			
+			String article = preprocess.removeStopWords(s.getKey().getText());
+			double sim = parser.getHigherScoreSimilarity(article, cs);
+			
+			if (sim >=0.6)
+				relevance = 1;
+			else
+				relevance = 0;
+			
 			if (articleNumber > maxDoc)
 				break;
 			String snippet;
@@ -300,6 +319,7 @@ public class Query
 			sb.append("<td>" + s.getKey().getTimestamp() + "</td>");
 			sb.append("<td>" + s.getKey().getScore() + "</td>");
 			sb.append("<td>" + snippet + "</td>");
+			sb.append("<td>" + relevance + "</td>");
 			sb.append("<td><a href=\"" + articleNumber + ".html"+"\">" + s.getKey().getUrl() + "</a>" + "</td>");
 			articleNumber++;
 			page.write(s.getKey().getHtml());

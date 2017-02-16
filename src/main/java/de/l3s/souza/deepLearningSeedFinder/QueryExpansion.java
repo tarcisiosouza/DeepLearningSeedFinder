@@ -51,6 +51,16 @@ public class QueryExpansion {
 	private String currentQuery;
 	private HashSet<String> nextQuery;
 	
+	public HashSet<String> getCollectionSpecification() {
+		return collectionSpecification;
+	}
+
+
+	public void setCollectionSpecification(HashSet<String> collectionSpecification) {
+		this.collectionSpecification = collectionSpecification;
+	}
+
+
 	public HashSet<String> getNextQuery() {
 		return nextQuery;
 	}
