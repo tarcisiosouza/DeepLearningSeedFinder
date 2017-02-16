@@ -301,10 +301,10 @@ public class Query
 			String article = preprocess.removeStopWords(s.getKey().getText());
 			double sim = parser.getHigherScoreSimilarity(article, cs);
 			
-			if (sim >=0.6)
-				relevance = 1;
-			else
+			if (sim < 0.5)
 				relevance = 0;
+			else
+				relevance = 1;
 			
 			if (articleNumber > maxDoc)
 				break;

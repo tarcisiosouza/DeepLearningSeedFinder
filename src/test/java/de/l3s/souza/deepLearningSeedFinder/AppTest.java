@@ -36,7 +36,7 @@ public class AppTest
     {
    
 //initialQuery, limit, field, terms,  maxSimTerms,  maxDoc,  maxIter,  alpha, beta,gama)
-    	Query query = new Query ("bundestagswahl 2002",300,"url",7,40,10,2,0.4,0.2,0.8);
+    	Query query = new Query ("bundestagswahl 2002",300,"url",7,10,40,2,0.4,0.2,0.8);
     	//query.processQuery("angela merkel");
     }
 }
