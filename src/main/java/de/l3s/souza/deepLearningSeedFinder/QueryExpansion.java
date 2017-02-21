@@ -181,6 +181,22 @@ public class QueryExpansion {
 			
 		}
 		
+		
+		System.out.println ("articles: "+articlesWithoutDup.size()+ "non relevant "+ count);
+		for (Entry<String, Article> s : articlesWithoutDup.entrySet())	
+		{
+			
+			String article = preprocess.removeStopWords(s.getValue().getText());
+			double sim = parser.getHigherScoreSimilarity(article, collectionSpecification);
+			if (sim < 0.4)
+			{
+				count++;
+				continue;
+			}
+			
+		}
+		
+		
 		urlTerms = normalizeScores (urlTerms);
 		
 		for (Entry<String,Double> s: urlTerms.entrySet())

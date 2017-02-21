@@ -121,7 +121,7 @@ public class Query
 		return nextQuery;
 	}
 	//"bundestagswahl 2002",10000,"text",4,10,500,5,0.2,0.02);
-	public Query(String initialQuery,int limit,String field,int terms, int maxSimTerms, int maxDoc, int maxIter, double alpha,double beta,double gama) throws Exception {
+	public Query(String initialQuery,int limit,String field,int terms, int maxSimTerms, int maxDoc, int maxIter, double alpha,double beta,double gama,double scoreParam) throws Exception {
 		
 		super();
 		this.beta = beta;
@@ -136,7 +136,7 @@ public class Query
 		  sb.append("<html>");
 		    sb.append("<head>");
 		    
-		    sb.append("<title> SeedFinder Deep Learning search Results");
+		    sb.append("<title> SeedFinder"+ field +" search Results");
 		    sb.append("</title>");
 		    sb.append("<style>");
 		    sb.append("table, th, td {");
@@ -148,7 +148,8 @@ public class Query
 		    sb.append("}");
 		    sb.append("</style>");
 		    sb.append("</head>");
-		    sb.append("<body><center><b>SeedFinder Deep Learning search</b></center>");
+		    sb.append("<body><center><b>SeedFinder " + field +"-search</b></center>");
+		    sb.append("<center><b>Parameters {alpha: "+ alpha + " beta: "+ beta +" gama: "+ gama+ " scoreFunction: "+scoreParam+"}</b></center>");
 		  //  sb.append("<body><center><b>URL search</b></center>");
 		    sb.append("<script>");
 		    sb.append("var e = document.getElementById('parent')");
@@ -223,8 +224,6 @@ public class Query
 		while (iter <= maxIter)
 		{
 			
-			if (iter==2)
-				System.out.println();
 			currentQueryString = "";
 			Iterator<String> iterator = nextQuery.iterator();
 			int size = nextQuery.size();
@@ -272,7 +271,7 @@ public class Query
 		}
 		
 		fitFinalDoc();
-		finalDocSet = urlScoreObject.urlScoreFunction("2002", finalDocSet);
+		finalDocSet = urlScoreObject.urlScoreFunction("2002", finalDocSet,scoreParam);
 		sortFinalDoc();
 	//	evaluateDocuments();
 	//	sortFinalDoc();
@@ -301,7 +300,7 @@ public class Query
 			String article = preprocess.removeStopWords(s.getKey().getText());
 			double sim = parser.getHigherScoreSimilarity(article, cs);
 			
-			if (sim < 0.5)
+			if (sim < 0.4)
 				relevance = 0;
 			else
 				relevance = 1;

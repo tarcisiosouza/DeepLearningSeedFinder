@@ -21,6 +21,7 @@ public class PairDocumentSimilarity {
         return termFrequencyMap;
     }
 
+    
     /**
      * @param text1 
      * @param text2 

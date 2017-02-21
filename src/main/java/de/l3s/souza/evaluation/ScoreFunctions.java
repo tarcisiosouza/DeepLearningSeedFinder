@@ -15,10 +15,10 @@ public class ScoreFunctions {
 
 	private DateUtils dateObject = new DateUtils ();
 	
-	 public HashMap<Article,Double> urlScoreFunction (String year,HashMap<Article,Double> documents) throws ParseException, java.text.ParseException
+	 public HashMap<Article,Double> urlScoreFunction (String year,HashMap<Article,Double> documents,double alpha) throws ParseException, java.text.ParseException
 	    {
 	    	String queryDate = year + "-22-09";
-	    	double alpha = 0.001;
+	    	
 	    	HashMap<Article,Double> documentsUrlScore = new HashMap<Article,Double>();
 	    	Date time = dateObject.convertToDate(queryDate);
 	    	Long ts;
