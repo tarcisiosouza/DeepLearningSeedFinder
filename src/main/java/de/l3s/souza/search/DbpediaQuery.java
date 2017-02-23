@@ -27,7 +27,7 @@ public class DbpediaQuery {
 			          
 			                 "{<http://de.dbpedia.org/resource/"+str+">"+ "<http://purl.org/dc/terms/subject> ?title "+
 			                   
-			           //        "FILTER regex(?title," + regex + ")"+
+			                   "FILTER regex(?title," + regex + ")"+
 			                  "}LIMIT 10";
 			try {
 			 query = QueryFactory.create(sparqlQueryString2);

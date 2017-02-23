@@ -44,7 +44,7 @@ import de.unihd.dbs.uima.annotator.heideltime.resources.Language;
 public class Query 
 {
 	private static final boolean localmode = false;
-	private ScoreFunctions urlScoreObject = new ScoreFunctions();
+	private ScoreFunctions urlScoreObject;
 	private int terms;
 	private BufferedWriter bw;
 	private int maxSimTerms;
@@ -125,6 +125,7 @@ public class Query
 		
 		super();
 		this.beta = beta;
+		urlScoreObject = new ScoreFunctions (scoreParam);
 		entitiesCandidates = new HashMap<String,Double>();
 		entitiesFromBabelFy = new ArrayList<String>();
 		entitiesInLinks = new HashSet<String>();
@@ -271,7 +272,7 @@ public class Query
 		}
 		
 		fitFinalDoc();
-		finalDocSet = urlScoreObject.urlScoreFunction("2002", finalDocSet,scoreParam);
+		finalDocSet = urlScoreObject.urlScoreFunction("2002", finalDocSet);
 		sortFinalDoc();
 	//	evaluateDocuments();
 	//	sortFinalDoc();

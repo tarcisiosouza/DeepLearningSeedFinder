@@ -24,15 +24,19 @@ import java.util.Vector;
 
 import de.l3s.elasticquery.Article;
 import de.l3s.souza.annotation.EntityUtils;
+import de.l3s.souza.date.DateUtils;
 import de.l3s.souza.evaluation.DocumentParser;
 import de.l3s.souza.evaluation.DocumentSimilarity;
 import de.l3s.souza.evaluation.PairDocumentSimilarity;
 import de.l3s.souza.preprocess.PreProcess;
+import de.l3s.souza.search.DBpediaLookupClient;
 import de.unihd.dbs.heideltime.standalone.HeidelTimeStandalone;
 
 public class QueryExpansion {
 	
 	private HashMap<String,Double> queryCandidatesScores;
+	private DateUtils dateUtils = new DateUtils ();
+	private DBpediaLookupClient dbPediaClient;
 	private PairDocumentSimilarity parser = new PairDocumentSimilarity ();
 	private HashSet <String> collectionSpecification;
 	private HashMap<String,Double> urlTerms = new HashMap<String,Double>(); //to hold all terms
@@ -73,7 +77,6 @@ public class QueryExpansion {
 		collectionSpecification = new HashSet <String> ();
 		parseFiles("/home/souza/CS");
 		similarity = new DocumentSimilarity ();
-		
 		currentQuery = cQuery;
 		nextQuery = new HashSet<String>();
 		queryCandidatesScores = new HashMap<String,Double>();
@@ -143,6 +146,7 @@ public class QueryExpansion {
 		int count2 = 0;
 		String timeRetrieved;
 		Date d1 = new Date ();
+		String[] allMatches;
 		
 		nextQuery.clear();
 		
@@ -156,13 +160,16 @@ public class QueryExpansion {
 				count++;
 				continue;
 			}
-			
+			allMatches = null;
 			String url = s.getValue().getUrl();
+			allMatches = dateUtils.getDate(url);
 			
 			String tokenizedTerms = preprocess.preProcessUrl(url);   //to get individual terms
 			if (tokenizedTerms.contentEquals(""))
 				continue;
 			StringTokenizer token = new StringTokenizer (tokenizedTerms);
+			
+			timeRetrieved = heidelTime.process(tokenizedTerms,d1);
 			
 			while (token.hasMoreTokens()) {
 				String term = token.nextToken();
@@ -171,12 +178,30 @@ public class QueryExpansion {
 				timeRetrieved = null;
 				if (term.length()<=2)
 					continue;
-				
+			/*	
 				if (nearest.isEmpty() && (annotations.getEntities(term)==null) && ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL")))
 					continue;
 				else
 					 urlTerms.put(term, sim);
+				*/
+			/*	
+				if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
+				{
+					sim = calculateTempScoreTerm (timeRetrieved,sim);
 					
+				}
+				
+				
+				if (dbPediaClient.hasResults(term))
+					urlTerms.put(term, sim);
+				else
+					if (annotations.getEntities(term)!=null)
+						urlTerms.put(term, sim);
+					else if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
+					{
+						
+					}
+					*/
 			}	
 			
 		}
@@ -235,6 +260,15 @@ public class QueryExpansion {
 			System.out.println (s.getKey() + " " +s.getValue());
 		}
 		*/
+	}
+	
+	public double calculateTempScoreTerm (String timeMl, double termScore)
+	{
+		double currentScore = termScore;
+		
+		return currentScore;
+		
+		
 	}
 	public void extractSimilarTermsQuery (deepLearningUtils deepLearning, EntityUtils annotations, HashMap<String,Double> entities)
 	{

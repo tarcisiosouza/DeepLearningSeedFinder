@@ -100,7 +100,7 @@ public class PreProcess {
 			int position = 0;
 			String currentChar;
 			
-			if (isNumber (str) || stopwords.contains(str.toLowerCase()) || str.length()<=2 || isNumberConcatChar(str))
+			if (stopwords.contains(str.toLowerCase()) || str.length()<=2 || isNumberConcatChar(str))
 				return false;
 				while (position < str.length())
 				{
