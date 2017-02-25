@@ -174,7 +174,7 @@ public class QueryExpansion {
 			while (token.hasMoreTokens()) {
 				String term = token.nextToken();
 				term = term.toLowerCase();
-			//	Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
+				Collection<String> nearest = deepLearning.getWordsNearest(term, 5);
 				timeRetrieved = null;
 				if (term.length()<=2)
 					continue;
