@@ -177,13 +177,13 @@ public class QueryExpansion {
 				term = term.toLowerCase();
 				Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
 				timeRetrieved = null;
-				if (term.length()<=2)
+				annotations.setLanguage(term);
+				if (term.length()<=2 || !(annotations.getLanguage(term).contentEquals("en")))
 					continue;
 				
 				if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
 				{
 					sim = calculateTempScoreTerm (timeRetrieved,sim);
-					
 				}
 				
 				dbPediaClient = new DBpediaLookupClient (term);

@@ -22,6 +22,11 @@ public class EntityUtils {
 		return annotation.getLanguage();
 	}
 	
+	public String getLanguage (String str)
+	{
+		return annotation.getLanguage(str);
+	}
+	
 	public String getEntities (String text)
 	{
 		annotation.annotate(text);

@@ -28,9 +28,16 @@ public class Annotations {
 		lang = lp.detectLanguage(input);
 	}
 	
+
 	public Vector<String> getLanguage ()
 	{
 		return lang;
+	}
+	
+	public String getLanguage (String input)
+	{
+		Vector<String> str = lp.detectLanguage(input);
+		return str.elementAt(0);
 	}
 	
 	public static Vector<String> getLang() {
