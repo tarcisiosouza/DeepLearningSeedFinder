@@ -209,7 +209,7 @@ public class Query
 	/*	if (localmode)
 			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/Users/tarcisio/Documents/workspace/deepLearningSeedFinder/articles.txt");
 		else
-			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");*/
+			deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt"); */
 	//	deepLearning.loadModel("pathToSaveModel.txt");
 	//	extractEntitiesFromDocuments();
 		//queryExpansion.extractSimilarTermsQuery(deepLearning, annotations,entitiesCandidates);

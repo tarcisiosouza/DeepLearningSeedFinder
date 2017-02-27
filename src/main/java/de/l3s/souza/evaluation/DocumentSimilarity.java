@@ -24,7 +24,7 @@ import org.json.simple.JSONValue;
 
 public class DocumentSimilarity
 {
-
+/*
 
  public double getScoreSimilarity(String text1, String text2) throws Exception {
     
@@ -77,4 +77,6 @@ public class DocumentSimilarity
 	 return currentHigher;
 	 
  }
+ 
+ */
 }

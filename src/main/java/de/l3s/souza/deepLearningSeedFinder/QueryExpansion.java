@@ -73,6 +73,7 @@ public class QueryExpansion {
 	public QueryExpansion(String cQuery,HashMap<String,Article> articlesWitDup,HashMap<String,Article> art,
 			int totalSimilar,int expandedTerms, double alpha,double beta) throws FileNotFoundException, IOException {
 		
+		
 		preprocess = new PreProcess ();
 		collectionSpecification = new HashSet <String> ();
 		parseFiles("/home/souza/CS");
@@ -174,34 +175,30 @@ public class QueryExpansion {
 			while (token.hasMoreTokens()) {
 				String term = token.nextToken();
 				term = term.toLowerCase();
-				Collection<String> nearest = deepLearning.getWordsNearest(term, 5);
+				Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
 				timeRetrieved = null;
 				if (term.length()<=2)
 					continue;
-			/*	
-				if (nearest.isEmpty() && (annotations.getEntities(term)==null) && ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL")))
-					continue;
-				else
-					 urlTerms.put(term, sim);
-				*/
-			/*	
+				
 				if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
 				{
 					sim = calculateTempScoreTerm (timeRetrieved,sim);
 					
 				}
 				
-				
+				dbPediaClient = new DBpediaLookupClient (term);
 				if (dbPediaClient.hasResults(term))
+				{
 					urlTerms.put(term, sim);
+					System.out.println ("adding term "+term);
+				}
 				else
-					if (annotations.getEntities(term)!=null)
+					if (!nearest.isEmpty())
 						urlTerms.put(term, sim);
-					else if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
-					{
-						
-					}
-					*/
+					else
+						if (annotations.getEntities(term)!=null)
+							urlTerms.put(term, sim);
+				
 			}	
 			
 		}
