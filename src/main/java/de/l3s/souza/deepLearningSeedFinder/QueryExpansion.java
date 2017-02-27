@@ -177,12 +177,9 @@ public class QueryExpansion {
 				term = term.toLowerCase();
 				Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
 				timeRetrieved = null;
-				annotations.setLanguage(term);
-				if (term.length()<=2)
-					continue;
 				
-				if (annotations.getLanguage(term).contentEquals("en"))
-					System.out.println("language detected: en: term: "+ term);
+				if (term.length()<=2 || annotations.getLanguage(term).contentEquals("en"))
+					continue;
 				
 				if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
 				{
@@ -191,23 +188,18 @@ public class QueryExpansion {
 				
 				dbPediaClient = new DBpediaLookupClient (term);
 				if (dbPediaClient.hasResults(term))
-				{
+
 					urlTerms.put(term, sim);
-					System.out.println ("adding term "+term);
-				}
 				else
 					if (!nearest.isEmpty())
 						urlTerms.put(term, sim);
 					else
 						if (annotations.getEntities(term)!=null)
 							urlTerms.put(term, sim);
-				
 			}	
 			
 		}
-		
-		
-		System.out.println ("articles: "+articlesWithoutDup.size()+ "non relevant "+ count);
+		System.out.println ("articles: "+articlesWithoutDup.size()+ " non relevant "+ count);
 		for (Entry<String, Article> s : articlesWithoutDup.entrySet())	
 		{
 			
@@ -220,8 +212,7 @@ public class QueryExpansion {
 			}
 			
 		}
-		
-		
+	
 		urlTerms = normalizeScores (urlTerms);
 		
 		for (Entry<String,Double> s: urlTerms.entrySet())
@@ -254,12 +245,12 @@ public class QueryExpansion {
 			if (terms <= expandTerms)
 				nextQuery.add(s.getKey());
 		}
-	/*	
+		
 		for (Entry<String,Double> s: urlTerms.entrySet())
 		{
 			System.out.println (s.getKey() + " " +s.getValue());
 		}
-		*/
+		
 	}
 	
 	public double calculateTempScoreTerm (String timeMl, double termScore)

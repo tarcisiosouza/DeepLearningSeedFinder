@@ -247,7 +247,7 @@ public class Query
 			currentQueryString = currentQueryString.replaceAll("ae", "ä");
 			System.out.println ("Processing query: "+currentQueryString+" "+"iter: "+iter);
 			addQueryTerms(currentQueryString);
-			processQuery(currentQueryString,"text");
+			processQuery(currentQueryString,"url");
 			handleDuplicates(articles);
 			populateRetrivedDocuments();
 		
