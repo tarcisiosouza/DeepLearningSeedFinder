@@ -178,8 +178,11 @@ public class QueryExpansion {
 				Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
 				timeRetrieved = null;
 				annotations.setLanguage(term);
-				if (term.length()<=2 || !(annotations.getLanguage(term).contentEquals("en")))
+				if (term.length()<=2)
 					continue;
+				
+				if (annotations.getLanguage(term).contentEquals("en"))
+					System.out.println("language detected: en: term: "+ term);
 				
 				if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
 				{
