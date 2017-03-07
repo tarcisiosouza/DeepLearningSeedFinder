@@ -34,6 +34,7 @@ import de.l3s.souza.annotation.EntityUtils;
 import de.l3s.souza.evaluation.PairDocumentSimilarity;
 import de.l3s.souza.evaluation.ScoreFunctions;
 import de.l3s.souza.preprocess.PreProcess;
+import de.l3s.souza.svm.WekaSVM;
 import de.unihd.dbs.heideltime.standalone.DocumentType;
 import de.unihd.dbs.heideltime.standalone.HeidelTimeStandalone;
 import de.unihd.dbs.heideltime.standalone.OutputType;
@@ -121,18 +122,17 @@ public class Query
 		return nextQuery;
 	}
 	//"bundestagswahl 2002",10000,"text",4,10,500,5,0.2,0.02);
-	public Query(String initialQuery,int limit,String field,int terms, int maxSimTerms, int maxDoc, int maxIter, double alpha,double beta,double gama,double scoreParam) throws Exception {
+	public Query(String initialQuery,int limit,String field,int terms, int maxSimTerms,String eventDate, int maxDoc, int maxIter, double alpha,double beta,double gama,double scoreParam) throws Exception {
 		
 		super();
 		this.beta = beta;
 		urlScoreObject = new ScoreFunctions (scoreParam);
 		entitiesCandidates = new HashMap<String,Double>();
-		entitiesFromBabelFy = new ArrayList<String>();
-		entitiesInLinks = new HashSet<String>();
+		//entitiesFromBabelFy = new ArrayList<String>();
+	//	entitiesInLinks = new HashSet<String>();
 		bw = new BufferedWriter(new FileWriter("output.txt", true));
 		BufferedWriter out = new BufferedWriter
     		    (new OutputStreamWriter(new FileOutputStream("SeedFinderDeepLearning.html"),"UTF-8"));
-		
 		
 		  sb.append("<html>");
 		    sb.append("<head>");
@@ -202,7 +202,7 @@ public class Query
 
 		  }*/
 		//deepLearning.trainRetrievedDocuments(articlesWithoutDuplicates, "/home/souza/workspace/deepLearningSeedFinder/articles.txt");
-		queryExpansion = new QueryExpansion(initialQuery, articlesWithoutDuplicates, articles, maxSimTerms, terms, alpha, beta);
+		queryExpansion = new QueryExpansion(initialQuery, articlesWithoutDuplicates, articles, maxSimTerms, terms,eventDate, alpha, beta);
 		//deepLearning.loadModel("pathToSaveModel.txt");
 
 		populateRetrivedDocuments();
@@ -242,9 +242,10 @@ public class Query
 				position++;
 				
 			}
-			currentQueryString = currentQueryString.replaceAll("ue", "ü");
+	
+			/*currentQueryString = currentQueryString.replaceAll("ue", "ü");
 			currentQueryString = currentQueryString.replaceAll("oe", "ö");
-			currentQueryString = currentQueryString.replaceAll("ae", "ä");
+			currentQueryString = currentQueryString.replaceAll("ae", "ä");*/
 			System.out.println ("Processing query: "+currentQueryString+" "+"iter: "+iter);
 			addQueryTerms(currentQueryString);
 			processQuery(currentQueryString,"url");

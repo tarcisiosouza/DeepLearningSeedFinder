@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,11 +31,15 @@ import de.l3s.souza.evaluation.DocumentSimilarity;
 import de.l3s.souza.evaluation.PairDocumentSimilarity;
 import de.l3s.souza.preprocess.PreProcess;
 import de.l3s.souza.search.DBpediaLookupClient;
+import de.l3s.souza.svm.WekaSVM;
 import de.unihd.dbs.heideltime.standalone.HeidelTimeStandalone;
 
 public class QueryExpansion {
 	
 	private HashMap<String,Double> queryCandidatesScores;
+	private WekaSVM svm;
+	private HashMap<String,String> unlabeledDocs;
+	private String eventDate;
 	private DateUtils dateUtils = new DateUtils ();
 	private DBpediaLookupClient dbPediaClient;
 	private PairDocumentSimilarity parser = new PairDocumentSimilarity ();
@@ -71,9 +76,12 @@ public class QueryExpansion {
 
 	
 	public QueryExpansion(String cQuery,HashMap<String,Article> articlesWitDup,HashMap<String,Article> art,
-			int totalSimilar,int expandedTerms, double alpha,double beta) throws FileNotFoundException, IOException {
+			int totalSimilar,int expandedTerms, String eventDate, double alpha,double beta) throws Exception {
 		
-		
+		this.eventDate = eventDate;
+		svm = new WekaSVM ();
+		svm.runSVM();
+		unlabeledDocs = new HashMap<String,String>();
 		preprocess = new PreProcess ();
 		collectionSpecification = new HashSet <String> ();
 		parseFiles("/home/souza/CS");
@@ -83,7 +91,9 @@ public class QueryExpansion {
 		queryCandidatesScores = new HashMap<String,Double>();
 		usedTerms = new HashMap<String,Double>();
 		querySimilarTerms = new HashMap<String,Double>();
-		articlesWithoutDup = new HashMap<String,Article>(articlesWitDup);
+		articlesWithoutDup = new HashMap<String,Article>();
+		//articlesWithoutDup = new HashMap<String,Article>(articlesWitDup);
+		setArticlesWithoutDup (articlesWitDup);
 		articles = new HashMap<String,Article>(art);
 		this.alpha = alpha;
 		this.beta = beta;
@@ -99,6 +109,12 @@ public class QueryExpansion {
 	public void setArticlesWithoutDup(HashMap<String, Article> newArticleSet) {
 		articlesWithoutDup.clear();
 		articlesWithoutDup = new HashMap<String,Article>(newArticleSet);
+		
+		for (Entry<String, Article> s : articlesWithoutDup.entrySet())	
+		{
+			unlabeledDocs.put(s.getValue().getText(), "1");
+			
+		}
 	}
 
 	public double getBeta() {
@@ -148,29 +164,44 @@ public class QueryExpansion {
 		String timeRetrieved;
 		Date d1 = new Date ();
 		String[] allMatches;
-		
+		HashMap<String,Double> classifiedDocuments = new HashMap<String,Double>();
 		nextQuery.clear();
+		
+		classifiedDocuments = svm.classifyInstance(unlabeledDocs);
 		
 		for (Entry<String, Article> s : articlesWithoutDup.entrySet())	
 		{
 			
+			timeRetrieved = null;
 			String article = preprocess.removeStopWords(s.getValue().getText());
+			
+			double relevance = classifiedDocuments.get(s.getValue().getText());
+			
 			double sim = parser.getHigherScoreSimilarity(article, collectionSpecification);
-			if (sim < 0.5)
+	
+			/*if (sim < 0.5)
 			{
 				count++;
 				continue;
-			}
+			}*/
+			
 			allMatches = null;
 			String url = s.getValue().getUrl();
 			allMatches = dateUtils.getDate(url);
 			
+			if (allMatches[0] != null)
+			{
+				
+				double newSim = calculateTempScoreTerm (allMatches[0],sim);
+				
+				urlTerms.put(allMatches[0], newSim);
+				
+			}
+				
 			String tokenizedTerms = preprocess.preProcessUrl(url);   //to get individual terms
 			if (tokenizedTerms.contentEquals(""))
 				continue;
 			StringTokenizer token = new StringTokenizer (tokenizedTerms);
-			
-			timeRetrieved = heidelTime.process(tokenizedTerms,d1);
 			
 			while (token.hasMoreTokens()) {
 				String term = token.nextToken();
@@ -178,13 +209,8 @@ public class QueryExpansion {
 				Collection<String> nearest = deepLearning.getWordsNearest(term, 1);
 				timeRetrieved = null;
 				
-				if (term.length()<=2 || annotations.getLanguage(term).contentEquals("en"))
+				if (term.length()<=2 ||annotations.getLanguage(term).contentEquals("en"))
 					continue;
-				
-				if ((timeRetrieved = heidelTime.process(term,d1)).contains("TIMEX3INTERVAL"))
-				{
-					sim = calculateTempScoreTerm (timeRetrieved,sim);
-				}
 				
 				dbPediaClient = new DBpediaLookupClient (term);
 				if (dbPediaClient.hasResults(term))
@@ -253,17 +279,46 @@ public class QueryExpansion {
 		
 	}
 	
-	public double calculateTempScoreTerm (String timeMl, double termScore)
+	public double calculateTempScoreTerm (String date, double termScore)
 	{
-		double currentScore = termScore;
 		
-		return currentScore;
+		Date timeC = null, timeQ = null;
+		double relevanceScore;
+		double tempBasedScore;
 		
+		SimpleDateFormat ft = new SimpleDateFormat ("yyyy-dd-MM");
 		
+		if (date.length()<=4)
+			date = date + "-01-01";
+		else
+			date = date.replaceAll("/", "-");
+		try {
+	         timeC = ft.parse(date); 
+	         timeQ = ft.parse(eventDate);
+	      }catch (Exception e) { 
+	         return 0.0f; 
+	      }
+
+		
+		long diff = timeC.getTime() - timeQ.getTime();
+		
+		if (diff==0)
+		{
+			relevanceScore = alpha * termScore + (1-alpha);
+		}
+		else
+		{
+			
+			tempBasedScore = (double)1/Math.abs(diff);
+			relevanceScore = alpha * termScore + (1-alpha)*tempBasedScore;
+		}
+		
+		return relevanceScore;
+
 	}
 	public void extractSimilarTermsQuery (deepLearningUtils deepLearning, EntityUtils annotations, HashMap<String,Double> entities)
 	{
-		String currentTerm ;
+		String currentTerm;
 		StringTokenizer token = new StringTokenizer (currentQuery);
 		resetQueryExpansionTerms();
 		querySimilarTerms = new HashMap<String,Double> ();

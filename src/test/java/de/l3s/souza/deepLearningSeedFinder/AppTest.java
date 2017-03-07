@@ -24,8 +24,8 @@ public class AppTest
     public void testApp() throws Exception
     {
    
-//initialQuery, limit, field, ExpandedTerms,  maxSimTerms,  maxDoc,  maxIter,  alpha, beta,gama, scoreFunctionParam)
-    	Query query = new Query ("bundestagswahl 2002",300,"url",7,10,40,2,0.4,0.2,0.1,0.6);
+//initialQuery, limit, field, ExpandedTerms,  maxSimTerms, eventDate, maxDoc,  maxIter,  alpha, beta,gama, scoreFunctionParam)
+    	Query query = new Query ("bundestagswahl 2002",2000,"url",7,10,"2002-22-09",50,2,0.4,0.2,0.1,0.6);
     	//query.processQuery("angela merkel");
     }
 }

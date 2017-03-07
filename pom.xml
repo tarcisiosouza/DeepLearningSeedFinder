@@ -88,6 +88,12 @@
     <classifier>models</classifier>
 </dependency>
 <dependency>
+		 <groupId>de.l3s.souza</groupId>
+  <artifactId>svm</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <scope>compile</scope>
+		</dependency>
+<dependency>
     <groupId>edu.stanford.nlp</groupId>
     <artifactId>stanford-corenlp</artifactId>
     <version>3.6.0</version>
